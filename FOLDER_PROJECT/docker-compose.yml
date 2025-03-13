@@ -1,0 +1,14 @@
+services:
+  node-app:
+    build: .
+    container_name: node-app
+    ports:
+      - "3001:3001"  # Expose backend on port 3001
+    environment:
+      - DATABASE_URL=postgres://postgres:password@postgres-container:5432/data_kepegawaian  # Connect using container name
+    networks:
+      - backend_network  # Connect node-app to the custom network
+
+networks:
+  backend_network:
+    external: true  # Use the already created custom network

@@ -1,0 +1,10 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "password",
+    "database": "data_kepegawaian",
+    "host": "postgres-container",
+    "port": "5432",
+    "dialect": "postgres"
+  }
+}
