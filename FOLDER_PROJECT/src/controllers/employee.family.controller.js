@@ -1,17 +1,25 @@
 const employeeFamilyService = require("../services/employee.family.service");
 const EmployeeFamilyDTO = require("../dto/employee.family.dto");
-
+const response = require("../middlewares/responseHandler");
 
 class EmployeeFamilyController {
 
   async getAll(req, res) {
-    const data = await employeeFamilyService.getAllEmployeeFamily();
-    res.json({ success: true, statusCode: 200, data });
+    try {
+      const data = await employeeFamilyService.getAllEmployeeFamily();
+      response.success(res, data);
+    } catch (error) {
+       response.error(res,error);
+    }
 	}
 
-  async getById(req, res) {
-    const data = await employeeFamilyService.getEmployeeFamilyById(req.params.id)
-    res.json({ success: true, statusCode: 200, data });
+  async getById(req, res) { 
+    try {
+      const data = await employeeFamilyService.getEmployeeFamilyById(req.params.id);
+      response.success(res,data);
+    } catch (error) {
+      response.error(res,error);
+    }   
   }
 
   async create(req, res) {
@@ -19,29 +27,14 @@ class EmployeeFamilyController {
       const { error, value } = EmployeeFamilyDTO.schema.validate(req.body, { abortEarly: false });
 
       if (error) {
-        return res.status(400).json({
-          status: "error",
-          message: "Validasi gagal",
-          errors: error.details.map((err) => err.message),
-        });
+        return response.validationError(res, error.details.map((err) => err.message));
       }
 
       const employeeFamily = await employeeFamilyService.createEmployeeFamily(value);
-  
-      res.json({
-        statusCode: 201,
-        status: "success",
-        message: "Employee family berhasil dibuat",
-        data: employeeFamily,
-      });
+      response.success(res,employeeFamily,"Employee Family berhasil dibuat",201);
 
     } catch (error) {
-      res.json({
-        statusCode: 500,
-        status: "error",
-        message: "Terjadi kesalahan saat membuat Employee family",
-        error: error.message,
-      });
+      response.error(res,error);
     }
   }
 
@@ -50,36 +43,24 @@ class EmployeeFamilyController {
       const { error, value } = EmployeeFamilyDTO.schema.validate(req.body, { abortEarly: false });
 
       if (error) {
-        return res.json({
-          statusCode: 400,
-          status: "error",
-          message: "Validasi gagal",
-          errors: error.details.map((err) => err.message),
-        });
+        return response.validationError(res, error.details.map((err) => err.message));
       }
 
-      const education = await employeeFamilyService.updateEmployeeFamily(req.params.id,value);
-  
-      res.json({
-        statusCode: 201,
-        status: "success",
-        message: "Employee family updated successfully"
-      });
+      const employeeProfile = await employeeFamilyService.updateEmployeeFamily(req.params.id,value);
+      response.success(res, null, "Employee Family berhasil diupdate",200);
 
     } catch (error) {
-      console.error(error)
-      res.json({
-        statusCode: 500,
-        status: "error",
-        message: "Terjadi kesalahan saat mengubah Employee family",
-        error: error.message,
-      });
+      response.error(res, error);
     }
   }
 
   async delete(req, res) {
-    await employeeFamilyService.deleteEmployeeFamily(req.params.id);
-    res.json({ success: true, statusCode: 200, message: "Employee family deleted successfully" });
+    try {
+      await employeeFamilyService.deleteEmployeeFamily(req.params.id);
+      response.success(res, null, "Employee family behasil dihapus", 200);
+    } catch (error) {
+       response.error(res,error);
+    }
   }
 
 }

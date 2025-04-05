@@ -1,24 +1,50 @@
 const employeeFamilyRepository =  require("../repositories/employee.family.repository");
 const { sequelize } = require("../models");
+const employeeRepository =  require("../repositories/employee.repository"); 
 
 class EmployeeFamilyService {
   
   async getAllEmployeeFamily() {
-    return employeeFamilyRepository.getAll();
+    try {
+      return employeeFamilyRepository.getAll();
+    } catch (error) {
+      throw error; 
+    }
   }
 
   async getEmployeeFamilyById(id) {
-    const employeeFamily = employeeFamilyRepository.getById(id);
+    try {
+      const employeeFamily = await employeeFamilyRepository.getById(id);
 
-    if (!employeeFamily) {
-      throw new NotFoundException(`Employee Family with ID ${id} not found`);
+      if (!employeeFamily) {
+        throw new Error(`Employee Family with ID ${id} not found`, { cause: { statusCode: 404 } });
+      }
+
+      return employeeFamily;
+    } catch (error) {
+      throw error;
     }
-    return employeeFamily;
   }
+
+  
+  async validateExistingEmployee (id){
+    try {
+      const employee =  await employeeRepository.getById(id);
+      if(!employee){
+        throw new Error(`Employee with ID ${id} not found`,{ cause: { statusCode: 404 } });
+      }
+    } catch (error) {
+       throw error
+    }
+  }
+
+
 
   async createEmployeeFamily(empFamilyData) {
     const transaction = await sequelize.transaction();
     try {
+
+      await this.validateExistingEmployee(empFamilyData.employee_id);
     
       const employeeFamily =  await 
         employeeFamilyRepository.create({
@@ -50,7 +76,10 @@ class EmployeeFamilyService {
 
   async updateEmployeeFamily(id,empFamilyData) {
 
-    await this.getEmployeeFamilyById(id);
+    try {
+     
+      await this.getEmployeeFamilyById(id);
+      await this.validateExistingEmployee(empFamilyData.employee_id);
 
       const employeeFamily  = await employeeFamilyRepository.update(
         id,{
@@ -67,14 +96,23 @@ class EmployeeFamilyService {
           updated_by : empFamilyData.created_by,
           updated_at : new Date()
       })
-    return employeeFamily;
+      return employeeFamily;
+
+    } catch (error) {
+       throw error;
+    }
   }
 
   async deleteEmployeeFamily(id) {
 
-    await this.getEmployeeFamilyById(id)
+    try {
 
-    return employeeFamilyRepository.delete(id);
+      await this.getEmployeeFamilyById(id);
+      return employeeFamilyRepository.delete(id);
+
+    } catch (error) {
+       throw error;
+    }
   }
 }
 

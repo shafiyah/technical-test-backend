@@ -1,26 +1,49 @@
 const educationRepository =  require("../repositories/education.repository");
+const employeeRepository =  require("../repositories/employee.repository");
 const { sequelize } = require("../models");
 
 class EduactionService {
   
   async getAllEducation() {
-    return educationRepository.getAll();
+    try {
+      return educationRepository.getAll();
+    } catch (error) {
+      throw error;
+    } 
   }
 
 
   async getEducationById(id) {
-    const employee = educationRepository.getById(id);
+    try {
 
-    if (!employee) {
-      throw new NotFoundException(`Education with ID ${id} not found`);
+      const education = await educationRepository.getById(id);
+
+      if (!education) {
+        throw new Error(`Education with ID ${id} not found`, { cause: { statusCode: 404 } });
+      }
+      return education;
+    }catch(error){
+       throw error
     }
-    return employee;
+  }
+
+  async validateExistingEmployee (id){
+    try {
+      const employee =  await employeeRepository.getById(id);
+      if(!employee){
+        throw new Error(`Employee with ID ${id} not found`,{ cause: { statusCode: 404 } });
+      }
+    } catch (error) {
+       throw error
+    }
   }
 
   async createEducation(educationData) {
     const transaction = await sequelize.transaction();
     try {
-       console.log(educationData)
+      
+      await this.validateExistingEmployee(educationData.employee_id);
+  
       const education =  await 
         educationRepository.create({
           employee_id: educationData.employee_id,
@@ -44,8 +67,11 @@ class EduactionService {
   }
 
   async updateEducation(education_id,educationData) {
+    try {
+      
+      await this.getEducationById(education_id);
+      await this.validateExistingEmployee(educationData.employee_id);
 
-    await this.getEducationById(education_id);
       const education  = await educationRepository.update(education_id,{
         employee_id: educationData.employee_id,
         name: educationData.name,
@@ -54,15 +80,26 @@ class EduactionService {
         updated_by: educationData.created_by,
         updated_at: new Date()
       })
-    return education;
+
+      return education;
+
+    } catch (error) {
+       throw error;
+    }
   }
 
   async deleteEducation(id) {
+    try {
 
-    await this.getEducationById(id);
+      await this.getEducationById(id);
+      return educationRepository.delete(id);
 
-    return educationRepository.delete(id);
+    } catch (error) {
+       throw error;
+    }
   }
+
+
 }
 
 module.exports = new EduactionService();

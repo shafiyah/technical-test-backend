@@ -7,16 +7,25 @@ const { sequelize } = require("../models");
 class EmployeeService {
   
   async getAllEmployees() {
-    return employeeRepository.getAll();
+    try {
+      return employeeRepository.getAll();
+    } catch (error) {
+       throw error;
+    }
   }
 
   async getEmployeeById(id) {
-    const employee = employeeRepository.getById(id);
+    try {
+      const employee = await employeeRepository.getById(id);
 
-    if (!employee) {
-      throw new NotFoundException(`Employee with ID ${id} not found`);
+      if (!employee) {
+        throw new Error(`Employee with ID ${id} not found`,{ cause: { statusCode: 404 } });
+      }
+      
+      return employee;
+    } catch (error) {
+       throw error;
     }
-    return employee;
   }
 
   async createEmployee(employeeData) {
@@ -54,9 +63,10 @@ class EmployeeService {
 
 
       if (Array.isArray(employeeData.education) && employeeData.education.length > 0) {
+     
         await Promise.all(
             employeeData.education.map(f =>
-               educationRepository.create({
+                educationRepository.create({
                     employee_id: employee.id,
                     name: f.name,
                     level: f.level,
@@ -104,10 +114,10 @@ class EmployeeService {
 
   async updateEmployee(employee_id,employeeData) {
 
-    await this.getEmployeeById(employee_id);
-
     const transaction = await sequelize.transaction();
     try {
+
+      await this.getEmployeeById(employee_id);
 
       const employee =  await employeeRepository.update( 
         {
@@ -141,7 +151,8 @@ class EmployeeService {
 
 
       if (Array.isArray(employeeData.education) && employeeData.education.length > 0) {
-        await educationRepository.destroy(employee_id, transaction );
+
+        await educationRepository.destroy(employee_id, transaction);
 
         await Promise.all(
             employeeData.education.map(f =>
@@ -161,7 +172,7 @@ class EmployeeService {
 
       if (Array.isArray(employeeData.family) && employeeData.family.length > 0) {
 
-        await educationRepository.destroy(employee_id, transaction );
+        await employeeFamilyRepository.destroy(employee_id, transaction );
 
         await Promise.all(
             employeeData.family.map(f =>
@@ -196,13 +207,20 @@ class EmployeeService {
 
   async deleteEmployee(id) {
 
-    await this.getEmployeeById(id);
-
-    return employeeRepository.delete(id);
+    try {
+      await this.getEmployeeById(id);
+      return employeeRepository.delete(id);
+    } catch (error) {
+       throw error;
+    }
   }
 
   async getReport(){
-     return employeeRepository.getReport();
+     try {
+      return employeeRepository.getReport();
+     } catch (error) {
+       throw error;
+     }    
   }
 }
 

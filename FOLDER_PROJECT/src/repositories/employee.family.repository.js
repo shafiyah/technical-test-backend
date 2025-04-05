@@ -25,7 +25,7 @@ class EmployeeFamilyRepository {
   }
 
   async destroy(employee_id, transaction) {
-    return EmployeeFamily.destroy({ where: { employee_id: employee_id }, transaction});
+    return await EmployeeFamily.destroy({ where: { employee_id: employee_id }, transaction});
   }
 }
 

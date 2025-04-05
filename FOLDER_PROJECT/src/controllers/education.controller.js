@@ -1,17 +1,26 @@
 const educationService = require("../services/education.service");
 const EducationDTO = require("../dto/education.dto");
+const response = require("../middlewares/responseHandler");
 
 
 class EducationController {
 
   async getAll(req, res) {
-    const data = await educationService.getAllEducation();
-    res.json({ success: true, statusCode: 200, data });
+    try {
+      const data = await educationService.getAllEducation();
+      response.success(res, data);
+    } catch (error) {
+      response.error(res,error);
+    }
 	}
 
   async getById(req, res) {
-    const data = await educationService.getEducationById(req.params.id);
-    res.json({ success: true, statusCode: 200, data });
+  try {
+      const data = await educationService.getEducationById(req.params.id);
+      response.success(res, data);
+    } catch (error) {
+      response.error(res,error);
+    }
   }
 
   async create(req, res) {
@@ -19,30 +28,16 @@ class EducationController {
       const { error, value } = EducationDTO.schema.validate(req.body, { abortEarly: false });
 
       if (error) {
-        return res.status(400).json({
-          status: "error",
-          message: "Validasi gagal",
-          errors: error.details.map((err) => err.message),
-        });
+        return response.validationError(res, error.details.map((err) => err.message));
       }
 
       const education = await educationService.createEducation(value);
-  
-      res.json({
-        statusCode: 201,
-        status: "success",
-        message: "Education berhasil dibuat",
-        data: education,
-      });
+      response.success(res, education, "Education berhasil dibuat", 201);
 
     } catch (error) {
-      res.json({
-        statusCode: 500,
-        status: "error",
-        message: "Terjadi kesalahan saat membuat Employee",
-        error: error.message,
-      });
+      response.error(res, error);
     }
+    
   }
 
   async update (req, res) {
@@ -50,36 +45,27 @@ class EducationController {
       const { error, value } = EducationDTO.schema.validate(req.body, { abortEarly: false });
 
       if (error) {
-        return res.json({
-          statusCode: 400,
-          status: "error",
-          message: "Validasi gagal",
-          errors: error.details.map((err) => err.message),
-        });
+        return response.validationError(res, error.details.map((err) => err.message));
       }
 
       const education = await educationService.updateEducation(req.params.id,value);
-  
-      res.json({
-        statusCode: 201,
-        status: "success",
-        message: "Education updated successfully"
-      });
+      response.success(res, null, "Education berhasil diupdate", 200);
 
     } catch (error) {
       console.error(error)
-      res.json({
-        statusCode: 500,
-        status: "error",
-        message: "Terjadi kesalahan saat mengubah Education",
-        error: error.message,
-      });
+      response.error(res, error);
     }
   }
 
   async delete(req, res) {
-    await educationService.deleteEducation(req.params.id);
-    res.json({ success: true, statusCode: 200, message: "Education deleted successfully" });
+    try {
+
+      await educationService.deleteEducation(req.params.id);
+      response.success(res, null, "Education berhasil dihapus", 200);
+
+    } catch (error) {
+      response.error(res, error);
+    }
   }
 
 }

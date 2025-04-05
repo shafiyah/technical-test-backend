@@ -1,45 +1,41 @@
 const employeeService = require("../services/employee.service");
 const EmployeeDTO = require("../dto/employee.dto");
+const response = require("../middlewares/responseHandler");
 
 class EmployeeController {
 
   async getAll(req, res) {
-    const data = await employeeService.getAllEmployees();
-    res.json({ success: true, statusCode: 200, data });
+    try {
+      const data = await employeeService.getAllEmployees();
+      response.success(res,data);
+    } catch (error) {
+       response.error(res,error)
+    }
 	}
 
   async getById(req, res) {
-    const data = await employeeService.getEmployeeById(req.params.id);
-    res.json({ success: true, statusCode: 200, data });
+    try {
+      const data = await employeeService.getEmployeeById(req.params.id);
+      response.success(res,data)
+    } catch (error) {
+      response.error(res,error);
+    }
   }
 
   async create(req, res) {
     try {
       const { error, value } = EmployeeDTO.schema.validate(req.body, { abortEarly: false });
-
+      
       if (error) {
-        return res.status(400).json({
-          status: "error",
-          message: "Validasi gagal",
-          errors: error.details.map((err) => err.message),
-        });
+        return response.validationError(res, error.details.map((err) => err.message));
       }
 
       const employee = await employeeService.createEmployee(value);
-  
-      res.status(201).json({
-        status: "success",
-        message: "Employee berhasil dibuat",
-        data: employee,
-      });
+      response.success(res,employee,"Employee berhasil dibuat",201);
 
     } catch (error) {
       console.error(error)
-      res.status(500).json({
-        status: "error",
-        message: "Terjadi kesalahan saat membuat Employee",
-        error: error.message,
-      });
+      response.error(res,error)
     }
   }
 
@@ -48,38 +44,36 @@ class EmployeeController {
       const { error, value } = EmployeeDTO.schema.validate(req.body, { abortEarly: false });
 
       if (error) {
-        return res.status(400).json({
-          status: "error",
-          message: "Validasi gagal",
-          errors: error.details.map((err) => err.message),
-        });
+        return response.validationError(res, error.details.map((err) => err.message));
       }
 
+
       const employee = await employeeService.updateEmployee(req.params.id,value);
-  
-      res.status(201).json({
-        status: "success",
-        message: "Employee updated successfully"
-      });
+      response.success(res,null,"Employee updated successfully", 200);
 
     } catch (error) {
       console.error(error)
-      res.status(500).json({
-        status: "error",
-        message: "Terjadi kesalahan saat mengubah Employee",
-        error: error.message,
-      });
+      response.error(error);
     }
   }
 
   async delete(req, res) {
-    await employeeService.deleteEmployee(req.params.id);
-    res.json({ success: true, statusCode: 200, message: "Employee deleted successfully" });
+    try {
+      await employeeService.deleteEmployee(req.params.id);
+      response.success(res,null,"Employee behasil dihapus",200);
+
+    } catch (error) {
+        response.error(res, error)
+    }
   }
 
   async getReport(req, res) {
-    const data = await employeeService.getReport();
-    res.json({ success: true, statusCode: 200, data });
+    try {
+      const data = await employeeService.getReport();
+      response.error(res,data)
+    } catch (error) {
+      response.error(res, error)
+    }
   }
 }
 

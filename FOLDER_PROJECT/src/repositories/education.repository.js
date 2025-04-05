@@ -24,7 +24,7 @@ class EducationRepository {
   }
 
   async destroy(employee_id, transaction) {
-    return Education.destroy({ where: { employee_id: employee_id }, transaction});
+    return await Education.destroy({ where: { employee_id: employee_id }, transaction});
   }
 
 }
